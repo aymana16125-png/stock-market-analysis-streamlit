@@ -12,10 +12,10 @@ A simple Streamlit application that searches stock symbols, fetches current and 
 
 ## Screenshots
 ![1](/screenshots/1.png?raw=true "Powershell Execution")
-![1](/screenshots/2.png?raw=true "Powershell Execution")
-![1](/screenshots/3.png?raw=true "Powershell Execution")
-![1](/screenshots/4.png?raw=true "Powershell Execution")
-![1](/screenshots/5.png?raw=true "Powershell Execution")
+![2](/screenshots/2.png?raw=true "Powershell Execution")
+![3](/screenshots/3.png?raw=true "Powershell Execution")
+![4](/screenshots/4.png?raw=true "Powershell Execution")
+![5](/screenshots/5.png?raw=true "Powershell Execution")
 
 ## Requirements
 - Python

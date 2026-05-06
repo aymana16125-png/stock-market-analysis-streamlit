@@ -5,7 +5,14 @@ import streamlit as st
 from src.api import fetch_stock_data
 from src.charts import create_price_figure
 from src.data_processing import add_indicators, clean_history, summarize_history
-from src.utils import format_currency, format_number, validate_symbol
+from src.utils import (
+    display_to_symbol,
+    format_currency,
+    format_number,
+    load_stock_catalog,
+    search_stock_catalog,
+    validate_symbol,
+)
 
 
 st.set_page_config(
@@ -14,12 +21,34 @@ st.set_page_config(
     layout="wide",
 )
 
+if "manual_symbol" not in st.session_state:
+    st.session_state.manual_symbol = "AAPL"
+
+if "auto_load" not in st.session_state:
+    st.session_state.auto_load = True
+
+
+def apply_selected_suggestion(selected_display: str) -> None:
+    symbol = display_to_symbol(selected_display)
+    if symbol:
+        st.session_state.manual_symbol = symbol
+        st.session_state.auto_load = True
+
+
 st.title("Stock Market Analysis System")
-st.caption("Streamlit app for searching stocks, displaying current prices, and plotting historical trends.")
+st.caption(
+    "Streamlit app for searching stocks, displaying current prices, and plotting historical trends."
+)
+
+catalog = load_stock_catalog()
 
 with st.sidebar:
     st.header("Controls")
-    symbol = st.text_input("Stock Symbol", value="AAPL", help="Example: AAPL, MSFT, TSLA")
+    st.text_input(
+        "Stock Symbol",
+        key="manual_symbol",
+        help="Default entry. You can still type any valid ticker manually.",
+    )
     period = st.selectbox("Historical Period", ["7d", "1mo", "3mo", "6mo", "1y"], index=1)
     interval_map = {
         "7d": "1d",
@@ -29,11 +58,51 @@ with st.sidebar:
         "1y": "1d",
     }
     interval = interval_map[period]
+
+    st.divider()
+    st.subheader("Live Stock Suggestions")
+    search_query = st.text_input(
+        "Search by symbol or company name",
+        value="",
+        help="Type part of a symbol or company name to filter the list.",
+        placeholder="Example: Apple, Tesla, JPM, NVIDIA",
+    )
+    suggestions = search_stock_catalog(search_query, limit=25)
+
+    if suggestions.empty:
+        st.info("No matching symbols found. Use the manual symbol input above.")
+        selected_display = None
+        apply_disabled = True
+    else:
+        selected_display = st.selectbox(
+            "Suggested symbols",
+            suggestions["display"].tolist(),
+            index=0,
+            help="Select a symbol-name pair from the filtered list.",
+        )
+        st.caption(f"{len(suggestions)} match(es) shown")
+        apply_disabled = False
+
+    apply_suggestion = st.button(
+        "Use selected suggestion",
+        type="secondary",
+        disabled=apply_disabled,
+        help="Copy the selected symbol into the manual field and reload the data.",
+    )
+
     load_button = st.button("Load Data", type="primary")
 
-should_load = load_button or "loaded_once" not in st.session_state
+if apply_suggestion and selected_display:
+    apply_selected_suggestion(selected_display)
+    st.rerun()
+
+symbol = (st.session_state.manual_symbol or "").strip().upper()
+should_load = load_button or st.session_state.auto_load or "loaded_once" not in st.session_state
+
 if should_load:
-    st.session_state["loaded_once"] = True
+    st.session_state.loaded_once = True
+    st.session_state.auto_load = False
+
     valid, message = validate_symbol(symbol)
     if not valid:
         st.error(message)
@@ -72,8 +141,13 @@ if should_load:
     st.plotly_chart(fig, use_container_width=True)
 
     st.subheader("Historical Data")
-    display_columns = [c for c in ["Date", "Open", "High", "Low", "Close", "Volume", "Daily Change", "Daily Return %", "MA_5", "MA_10"] if c in enriched.columns]
+    display_columns = [
+        c for c in ["Date", "Open", "High", "Low", "Close", "Volume", "Daily Change", "Daily Return %", "MA_5", "MA_10"]
+        if c in enriched.columns
+    ]
     st.dataframe(enriched[display_columns], use_container_width=True, hide_index=True)
 
     st.subheader("Testing Notes")
-    st.success("This symbol loaded successfully. Try another valid symbol or a blank/invalid symbol to test error handling.")
+    st.success(
+        "This symbol loaded successfully. Try another valid symbol, a manual override, or a blank/invalid symbol to test error handling."
+    )

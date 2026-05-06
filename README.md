@@ -10,7 +10,10 @@ A simple Streamlit application that searches stock symbols, fetches current and 
 - Handle invalid input
 - Basic testing with pytest
 
-## Tech Stack
+## Screenshots
+
+
+## Requirements
 - Python
 - Streamlit
 - Pandas

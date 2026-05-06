@@ -13,10 +13,17 @@ DEFAULT_CATALOG = pd.DataFrame(
         {"symbol": "AAPL", "name": "Apple Inc."},
         {"symbol": "MSFT", "name": "Microsoft Corporation"},
         {"symbol": "GOOGL", "name": "Alphabet Inc. Class A"},
+        {"symbol": "GOOG", "name": "Alphabet Inc. Class C"},
         {"symbol": "AMZN", "name": "Amazon.com, Inc."},
+        {"symbol": "META", "name": "Meta Platforms, Inc."},
+        {"symbol": "NVDA", "name": "NVIDIA Corporation"},
         {"symbol": "TSLA", "name": "Tesla, Inc."},
+        {"symbol": "JPM", "name": "JPMorgan Chase & Co."},
+        {"symbol": "V", "name": "Visa Inc."},
     ]
 )
+
+POPULAR_SYMBOLS = ["AAPL", "MSFT", "NVDA", "AMZN", "GOOGL", "META", "TSLA", "JPM", "V"]
 
 
 def format_currency(value, currency: str | None = "USD") -> str:
@@ -71,7 +78,27 @@ def load_stock_catalog() -> pd.DataFrame:
     return _normalize_catalog(df)
 
 
-def search_stock_catalog(query: str, limit: int = 30) -> pd.DataFrame:
+def get_popular_stocks(limit: int = 9) -> pd.DataFrame:
+    catalog = load_stock_catalog()
+    if catalog.empty:
+        return catalog.head(0)
+
+    ordered = []
+    seen = set()
+    for symbol in POPULAR_SYMBOLS:
+        row = catalog.loc[catalog["symbol"].str.upper() == symbol.upper()]
+        if not row.empty:
+            ordered.append(row.iloc[0])
+            seen.add(row.iloc[0]["symbol"])
+
+    if not ordered:
+        return catalog.head(limit).reset_index(drop=True)
+
+    result = pd.DataFrame(ordered)
+    return result.head(limit).reset_index(drop=True)
+
+
+def search_stock_catalog(query: str, limit: int = 15) -> pd.DataFrame:
     catalog = load_stock_catalog()
     if catalog.empty:
         return catalog

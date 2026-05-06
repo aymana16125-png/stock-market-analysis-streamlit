@@ -11,7 +11,7 @@ A simple Streamlit application that searches stock symbols, fetches current and 
 - Basic testing with pytest
 
 ## Screenshots
-
+![1](/screenshots/1.png?raw=true "Powershell Execution")
 
 ## Requirements
 - Python
@@ -25,7 +25,7 @@ A simple Streamlit application that searches stock symbols, fetches current and 
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-python -m streamlit run app.py
+
 ```
 
 ## Testing

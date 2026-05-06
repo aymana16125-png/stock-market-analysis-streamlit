@@ -27,5 +27,5 @@ streamlit run app.py
 
 ## Testing
 ```bash
-pytest -q
+python -m pytest -q
 ```

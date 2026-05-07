@@ -29,6 +29,7 @@ A simple Streamlit application that searches stock symbols, fetches current and 
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
+python -m streamlit run app.py
 
 ```
 

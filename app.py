@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import streamlit as st
@@ -11,6 +10,7 @@ from src.utils import (
     format_currency,
     format_number,
     get_popular_stocks,
+    load_stock_catalog,
     search_stock_catalog,
     validate_symbol,
 )
@@ -23,46 +23,44 @@ st.set_page_config(
 )
 
 st.title("Stock Market Analysis System")
-st.caption("Use the sidebar to search popular stocks or enter a custom stock code.")
+st.caption("Search a stock by company name or symbol. Popular picks are shown first.")
 
+# Load once for search and defaults.
 popular_df = get_popular_stocks()
 
-with st.sidebar:
-    st.header("Search")
-    search_term = st.text_input(
-        "Search stocks or companies",
-        value="",
-        placeholder="Apple, Tesla, AAPL, NVDA...",
-        help="Type part of a company name or stock code.",
-    )
+search_term = st.text_input(
+    "Search stock or company",
+    value="",
+    placeholder="Apple, Tesla, AAPL, NVDA...",
+    help="Type part of a company name or a stock code. Matching stocks appear below.",
+)
 
-    if search_term.strip():
-        matches = search_stock_catalog(search_term, limit=20)
-        if matches.empty:
-            stock_code = search_term.strip().upper()
-            st.caption("No catalog match. Using the text you entered as a custom stock code.")
-            st.code(stock_code, language="text")
-        else:
-            chosen_display = st.selectbox(
-                f"Matching stocks ({len(matches)})",
-                matches["display"].tolist(),
-                index=0,
-            )
-            stock_code = display_to_symbol(chosen_display)
+if search_term.strip():
+    matches = search_stock_catalog(search_term, limit=20)
+    if matches.empty:
+        stock_code = search_term.strip().upper()
+        chosen_display = stock_code
+        st.caption("Using the text you entered as a custom stock code.")
     else:
         chosen_display = st.selectbox(
-            "Popular stocks",
-            popular_df["display"].tolist(),
+            f"Matching stocks ({len(matches)})",
+            matches["display"].tolist(),
             index=0,
         )
         stock_code = display_to_symbol(chosen_display)
-
-    period = st.selectbox(
-        "Time period",
-        ["5d", "1mo", "3mo", "6mo", "1y", "2y", "5y"],
-        index=1,
+else:
+    chosen_display = st.selectbox(
+        "Popular stocks",
+        popular_df["display"].tolist(),
+        index=0,
     )
-    st.caption("Daily interval is used for consistency across periods.")
+    stock_code = display_to_symbol(chosen_display)
+period = st.selectbox(
+    "Time period",
+    ["5d", "1mo", "3mo", "6mo", "1y", "2y", "5y"],
+    index=1,
+)
+st.caption("Daily interval is used for consistency across periods.")
 
 valid, message = validate_symbol(stock_code)
 if not valid:
